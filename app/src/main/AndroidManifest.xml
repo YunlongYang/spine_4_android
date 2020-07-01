@@ -23,6 +23,10 @@
         <activity android:name="com.play.android.spine.ui.superbody.SuperBoyActivity">
 
         </activity>
+
+        <activity android:name="com.play.android.spine.ui.xiaoqiao.XiaoQiaoActivity">
+
+        </activity>
     </application>
 
 </manifest>
