@@ -1,0 +1,3 @@
+rootProject.name='spine_4_android'
+include ':app'
+include ':spine-android-library'
