@@ -31,17 +31,10 @@ package com.esotericsoftware.spine;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Pixmap.Format;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.Array;
@@ -50,16 +43,7 @@ import com.esotericsoftware.spine.AnimationState.AnimationStateAdapter;
 import com.esotericsoftware.spine.AnimationState.TrackEntry;
 import com.esotericsoftware.spine.utils.TwoColorPolygonBatch;
 
-import java.lang.Thread.UncaughtExceptionHandler;
-
 public class AndroidSkeletonViewer extends ApplicationAdapter {
-    static final float checkModifiedInterval = 0.250f;
-    static final float reloadDelay = 1;
-    static float uiScale = 1;
-    static String[] dataSuffixes = {".json", ".skel"};
-    static String[] atlasSuffixes = {".atlas", "-pro.atlas", "-ess.atlas"};
-    static String[] extraSuffixes = {"", ".txt", ".bytes"};
-    static String[] args;
 
     OrthographicCamera camera;
     TwoColorPolygonBatch batch;
@@ -68,9 +52,7 @@ public class AndroidSkeletonViewer extends ApplicationAdapter {
     SkeletonRendererDebug debugRenderer;
     SkeletonData skeletonData;
     Skeleton skeleton;
-    AnimationState state;
-    long skeletonModified, atlasModified;
-    float lastModifiedCheck, reloadTimer;
+    AnimationState animationState;
     StringBuilder status = new StringBuilder();
 
     public void create () {
@@ -96,50 +78,11 @@ public class AndroidSkeletonViewer extends ApplicationAdapter {
         loadSkeleton();
     }
 
-    FileHandle atlasFile (FileHandle skeletonFile) {
-        String baseName = skeletonFile.name();
-        for (String extraSuffix : extraSuffixes) {
-            for (String dataSuffix : dataSuffixes) {
-                String suffix = dataSuffix + extraSuffix;
-                if (baseName.endsWith(suffix)) {
-                    FileHandle file = atlasFile(skeletonFile, baseName.substring(0, baseName.length() - suffix.length()));
-                    if (file != null) return file;
-                }
-            }
-        }
-        return atlasFile(skeletonFile, baseName);
-    }
-
-    private FileHandle atlasFile (FileHandle skeletonFile, String baseName) {
-        for (String extraSuffix : extraSuffixes) {
-            for (String suffix : atlasSuffixes) {
-                FileHandle file = skeletonFile.sibling(baseName + suffix + extraSuffix);
-                if (file.exists()) return file;
-            }
-        }
-        return null;
-    }
 
     void loadSkeleton () {
-        try {
-            // Setup a texture atlas that uses a white image for images not found in the atlas.
-            Pixmap pixmap = new Pixmap(32, 32, Format.RGBA8888);
-            pixmap.setColor(new Color(1, 1, 1, 0.33f));
-            pixmap.fill();
-            final AtlasRegion fake = new AtlasRegion(new Texture(pixmap), 0, 0, 32, 32);
-            pixmap.dispose();
-
-
-            atlas = new TextureAtlas(Gdx.files.internal("xiaoqiao/xiaoqiao.atlas"));
-            SkeletonJson json = new SkeletonJson(atlas);
-            skeletonData = json.readSkeletonData(Gdx.files.internal("xiaoqiao/xiaoqiao.json"));
-            skeleton = new Skeleton(skeletonData);
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-//            ui.toast("Error loading skeleton: " + skeletonFile.name());
-            lastModifiedCheck = 5;
-            return;
-        }
+        atlas = new TextureAtlas(Gdx.files.internal("xiaoqiao/xiaoqiao.atlas"));
+        SkeletonJson json = new SkeletonJson(atlas);
+        skeletonData = json.readSkeletonData(Gdx.files.internal("xiaoqiao/xiaoqiao.json"));
 
         skeleton = new Skeleton(skeletonData);
         skeleton.updateWorldTransform();
@@ -147,15 +90,14 @@ public class AndroidSkeletonViewer extends ApplicationAdapter {
         skeleton = new Skeleton(skeleton); // Tests copy constructors.
         skeleton.updateWorldTransform();
 
-        state = new AnimationState(new AnimationStateData(skeletonData));
-        state.addListener(new AnimationStateAdapter() {
+        animationState = new AnimationState(new AnimationStateData(skeletonData));
+        animationState.addListener(new AnimationStateAdapter() {
 
             public void event (TrackEntry entry, Event event) {
 //                ui.toast(event.getData().getName());
             }
         });
 
-        lastModifiedCheck = checkModifiedInterval;
         // Populate UI.
 
 //        ui.window.getTitleLabel().setText(skeletonFile.name());
@@ -177,8 +119,7 @@ public class AndroidSkeletonViewer extends ApplicationAdapter {
         // Configure skeleton from UI.
 
 //        if (ui.skinList.getSelected() != null) skeleton.setSkin(ui.skinList.getSelected());
-        setAnimation(items);
-
+//        setAnimation(items);
         // ui.animationList.clearListeners();
         // state.setAnimation(0, "walk", true);
     }
@@ -216,7 +157,7 @@ public class AndroidSkeletonViewer extends ApplicationAdapter {
 
         // Draw skeleton origin lines.
         ShapeRenderer shapes = debugRenderer.getShapeRenderer();
-        if (state != null) {
+        if (animationState != null) {
             shapes.setColor(Color.DARK_GRAY);
             shapes.begin(ShapeType.Line);
             shapes.line(0, -99999, 0, 99999);
@@ -245,42 +186,42 @@ public class AndroidSkeletonViewer extends ApplicationAdapter {
 //            }
 
             // Pose and render skeleton.
-//            state.getData().setDefaultMix(ui.mixSlider.getValue());
-//            renderer.setPremultipliedAlpha(ui.premultipliedCheckbox.isChecked());
-//            batch.setPremultipliedAlpha(ui.premultipliedCheckbox.isChecked());
+            animationState.getData().setDefaultMix(1);
+            renderer.setPremultipliedAlpha(false);
+            batch.setPremultipliedAlpha(false);
 
-            float scaleX = 0;//ui.xScaleSlider.getValue(), scaleY = ui.yScaleSlider.getValue();
-            float scaleY = 0;//
+            float scaleX = 1f;//ui.xScaleSlider.getValue(), scaleY = ui.yScaleSlider.getValue();
+            float scaleY = 1f;//
             if (skeleton.scaleX == 0) skeleton.scaleX = 0.01f;
             if (skeleton.scaleY == 0) skeleton.scaleY = 0.01f;
             skeleton.setScale(scaleX, scaleY);
 
             delta = 0.032f ; //Math.min(delta, 0.032f) * ui.speedSlider.getValue();
             skeleton.update(delta);
-            state.update(delta);
-            state.apply(skeleton);
+            animationState.update(delta);
+            animationState.apply(skeleton);
             skeleton.updateWorldTransform();
 
             batch.begin();
             renderer.draw(batch, skeleton);
             batch.end();
 
-//            debugRenderer.setBones(ui.debugBonesCheckbox.isChecked());
-//            debugRenderer.setRegionAttachments(ui.debugRegionsCheckbox.isChecked());
-//            debugRenderer.setBoundingBoxes(ui.debugBoundingBoxesCheckbox.isChecked());
-//            debugRenderer.setMeshHull(ui.debugMeshHullCheckbox.isChecked());
-//            debugRenderer.setMeshTriangles(ui.debugMeshTrianglesCheckbox.isChecked());
-//            debugRenderer.setPaths(ui.debugPathsCheckbox.isChecked());
-//            debugRenderer.setPoints(ui.debugPointsCheckbox.isChecked());
-//            debugRenderer.setClipping(ui.debugClippingCheckbox.isChecked());
+            debugRenderer.setBones(true);
+            debugRenderer.setRegionAttachments(true);
+            debugRenderer.setBoundingBoxes(true);
+            debugRenderer.setMeshHull(true);
+            debugRenderer.setMeshTriangles(true);
+            debugRenderer.setPaths(true);
+            debugRenderer.setPoints(true);
+            debugRenderer.setClipping(true);
             debugRenderer.draw(skeleton);
         }
 
-        if (state != null) {
+        if (animationState != null) {
             // AnimationState status.
             status.setLength(0);
-            for (int i = state.getTracks().size - 1; i >= 0; i--) {
-                TrackEntry entry = state.getTracks().get(i);
+            for (int i = animationState.getTracks().size - 1; i >= 0; i--) {
+                TrackEntry entry = animationState.getTracks().get(i);
                 if (entry == null) continue;
                 status.append(i);
                 status.append(": [LIGHT_GRAY]");
