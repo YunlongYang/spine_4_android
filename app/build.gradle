@@ -25,7 +25,12 @@ android {
 
     sourceSets {
         main{
-            assets.srcDirs = [ 'src/main/assets','../spine-assets-base/demo','../spine-assets-base/playboy','../spine-assets-base/xiaoqiao' ]
+            assets.srcDirs = [ 'src/main/assets',
+                               '../spine-assets-base/demo',
+                               '../spine-assets-base/playboy',
+                               '../spine-assets-base/xiaoqiao',
+                               '../spine-assets-base/Bicycle'
+            ]
         }
     }
 

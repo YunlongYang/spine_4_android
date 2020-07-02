@@ -20,8 +20,10 @@ public class DisplayWrapperApplication extends ApplicationAdapter {
     public void create() {
         super.create();
         skeletonDisplayer = new SkeletonDisplayerBuilder()
-                .setAtlasGdxFilePath("xiaoqiao/xiaoqiao.atlas")
-                .setSkeletonGdxFilePath("xiaoqiao/xiaoqiao.json")
+//                .setAtlasGdxFilePath("xiaoqiao/xiaoqiao.atlas")
+//                .setSkeletonGdxFilePath("xiaoqiao/xiaoqiao.json")
+                .setAtlasGdxFilePath("bianfujing/bianfujing.atlas")
+                .setSkeletonGdxFilePath("bianfujing/bianfujing.json")
                 .build();
         skeletonDisplayer.create();
         // index:0, loop:true, mixDuration:0.37, mixBlend:replace, alpha:1.0

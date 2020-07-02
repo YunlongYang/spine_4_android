@@ -20,7 +20,7 @@ public class XiaoQiaoActivity extends AndroidApplication {
         displayWrapperApplication = new DisplayWrapperApplication();
 
         DisplayRenderParam displayRenderParam = new DisplayRenderParam();
-        displayRenderParam.setShowBones(true);
+        displayRenderParam.setShowBones(false);
         displayRenderParam.setShowRegions(false);
         displayRenderParam.setShowBoundingBoxes(false);
         displayRenderParam.setShowPaths(false);
@@ -28,8 +28,8 @@ public class XiaoQiaoActivity extends AndroidApplication {
         displayRenderParam.setShowClipping(false);
         displayRenderParam.setShowPremultipliedAlpha(false);
         displayRenderParam.setSpeed(0.3f);
-        displayRenderParam.setScaleX(1.0f);
-        displayRenderParam.setScaleY(1.0f);
+        displayRenderParam.setScaleX(1f);
+        displayRenderParam.setScaleY(1f);
         displayRenderParam.setDefaultMix(0.37f);
         displayWrapperApplication.setRenderParam(displayRenderParam);
         initialize(displayWrapperApplication, config);
